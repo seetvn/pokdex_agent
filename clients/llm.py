@@ -5,6 +5,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv()
 
+#TODO (Extension): add support for other LLM providers
+
 class LLM:
     def __init__(self, model: str | None = None, temperature: float = 0.2):
         self.client = OpenAI(api_key=os.getenv("AI_API_KEY"))

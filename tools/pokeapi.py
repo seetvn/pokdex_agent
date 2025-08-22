@@ -4,6 +4,7 @@ from clients.http import HttpClient
 
 BASE = "https://pokeapi.co/api/v2"
 
+#TODO: add more tools for moves, abilities, etc.
 class PokeAPI:
     def __init__(self):
         self.http = HttpClient(BASE)

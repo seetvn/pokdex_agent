@@ -10,6 +10,8 @@ def parse_args():
     ap.add_argument("--temperature", type=float, default=0.2)
     return ap.parse_args()
 
+#TODO: make main() continuous
+#TODO: change setup of loop
 def main():
     args = parse_args()
     agent = Agent(model=args.model, max_steps=args.max_steps, temperature=args.temperature)
