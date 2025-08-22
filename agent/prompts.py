@@ -16,7 +16,7 @@ Rules:
 - Avoid overclaiming; if the API cannot verify something, say so briefly.
 - The final output should be as detailed as possible, with specific facts and figures where relevant (e.g., base stats, encounter locations, type matchups, evolution methods).
 
-You can call tools such as get_pokemon, get_pokemon_species, list_pokemon_by_habitat, encounters_for_pokemon, generation, version, get_type, get_move.
+You can call tools such as get_pokemon, get_pokemon_species, list_pokemon_by_habitat, encounters_for_pokemon, generation, version, get_type, get_move, get_ability.
 You can also ask clarifying questions to the user if needed via the tool clarify_user.
 
 Clarification policy (via clarify_user):
@@ -32,7 +32,7 @@ Clarification policy (via clarify_user):
 """
 
 PLANNER_INSTRUCTION = """You are a PhD-level **research associate** for Pokemon. Make a plan for how to research and answer the previous request by breaking it into steps.
-Focus on: base stats (HP,strength), version, type(s), habitat, rarity, training ease (growth rate, capture rate), and encounter locations. Then output the plan as a numbered list. 
+Focus on the necessary stats based on the plan you have formulated such as : damage, accuracy, base stats (HP,strength), version, type(s), habitat, rarity, training ease (growth rate, capture rate), and encounter locations. Then output the plan as a numbered list. 
 """
 #Speak in the past tense, so it seems like you ve already done it.
 # - At each step, summarised what you have learned and adapt your plan as needed.

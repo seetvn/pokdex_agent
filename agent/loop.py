@@ -41,8 +41,11 @@ class Agent:
                 # Show and store the returned content (if any) for this step
                 if content and content.strip():
                     thought = content.strip()
+                    if not thoughts:
+                        console.print(Markdown(f"** Breakdown:**\n\n{thought}"))
+                    else:
+                        console.print(Markdown(f"**Step {step} gained info:**\n\n{thought}"))
                     thoughts.append(thought)
-                    console.print(Markdown(f"**Research steps taken :**\n\n{thought}"))
 
                 # Process each tool call in order
                 for tc in tool_calls:

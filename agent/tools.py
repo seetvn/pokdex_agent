@@ -11,6 +11,7 @@ from tools.pokeapi import (
     tool_encounters_for_pokemon,
     tool_generation,
     tool_version,
+    tool_get_ability,    
 )
 
 ToolHandler = Callable[..., Dict[str, Any]]
@@ -119,6 +120,16 @@ def build_tool_registry() -> Dict[str, Tool]:
                 "required": ["name"],
             },
             handler=tool_version,
+        ),
+        "get_ability": Tool(
+            name="get_ability",
+            description="Fetch a Pokémon ability (effect, short effect, generation, main-series flag, and which Pokémon can have it).",
+            schema={
+                "type": "object",
+                "properties": {"name": {"type": "string"}},
+                "required": ["name"],
+            },
+            handler=tool_get_ability,
         ),
         "clarify_user": Tool(
             name="clarify_user",

@@ -36,6 +36,9 @@ class PokeAPI:
 
     def version(self, name: str) -> Dict[str, Any]:
         return self.http.get(f"/version/{name}")
+    
+    def get_ability(self, name: str) -> Dict[str, Any]:
+        return self.http.get(f"/ability/{name.strip().lower()}")
 
 # Singleton
 poke_api = PokeAPI()
@@ -45,6 +48,7 @@ poke_api = PokeAPI()
 def tool_get_pokemon(name: str) -> Dict[str, Any]:
     data = poke_api.get_pokemon(name)
     # Summarise essential bits to keep tokens small
+    moves = data.get("moves", [])
     summary = {
         "name": data.get("name"),
         "types": [t["type"]["name"] for t in data.get("types", [])],
@@ -52,6 +56,7 @@ def tool_get_pokemon(name: str) -> Dict[str, Any]:
         "stats": {s["stat"]["name"]: s["base_stat"] for s in data.get("stats", [])},
         "abilities": [a["ability"]["name"] for a in data.get("abilities", [])],
         "moves_count": len(data.get("moves", [])),
+        "moves": [m["move"]["name"] for m in moves[:min(10,len(moves))]],  # first 5 moves
         "encounters_url": f"{BASE}/pokemon/{data.get('name')}/encounters"
     }
     return {"summary": summary}
@@ -136,4 +141,18 @@ def tool_version(name: str) -> Dict[str, Any]:
     return {
         "name": data.get("name"),
         "version_group": data.get("version_group", {}).get("name"),
+    }
+
+def tool_get_ability(name: str) -> Dict[str, Any]:
+    data = poke_api.get_ability(name)
+    pokemon = [p["pokemon"]["name"] for p in data.get("pokemon", [])]
+    effect = next((e["effect"] for e in data.get("effect_entries", []) if e["language"]["name"] == "en"), None)
+    short_effect = next((e["short_effect"] for e in data.get("effect_entries", []) if e["language"]["name"] == "en"), None)
+    return {
+        "name": data.get("name"),
+        "generation": data.get("generation", {}).get("name"),
+        "is_main_series": data.get("is_main_series"),
+        "effect": effect,
+        "short_effect": short_effect,
+        "pokemon_with_ability": pokemon,
     }
