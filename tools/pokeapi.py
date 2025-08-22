@@ -145,7 +145,8 @@ def tool_version(name: str) -> Dict[str, Any]:
 
 def tool_get_ability(name: str) -> Dict[str, Any]:
     data = poke_api.get_ability(name)
-    pokemon = [p["pokemon"]["name"] for p in data.get("pokemon", [])]
+    pokemon_list = data.get("pokemon", [])
+    pokemon = [p["pokemon"]["name"] for p in pokemon_list[:min(10,len(pokemon_list))]]  # first 10 Pokémon with this ability
     effect = next((e["effect"] for e in data.get("effect_entries", []) if e["language"]["name"] == "en"), None)
     short_effect = next((e["short_effect"] for e in data.get("effect_entries", []) if e["language"]["name"] == "en"), None)
     return {
