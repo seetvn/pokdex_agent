@@ -11,7 +11,8 @@ from tools.pokeapi import (
     tool_encounters_for_pokemon,
     tool_generation,
     tool_version,
-    tool_get_ability,    
+    tool_get_ability,
+    tool_get_encounter_condition    
 )
 
 ToolHandler = Callable[..., Dict[str, Any]]
@@ -43,7 +44,7 @@ def build_tool_registry() -> Dict[str, Tool]:
     return {
         "get_pokemon": Tool(
             name="get_pokemon",
-            description="Fetch core data about a Pokémon by name (types, stats, abilities).",
+            description="Fetch core data about a Pokemon by name (types, stats, abilities).",
             schema={
                 "type": "object",
                 "properties": {"name": {"type": "string"}},
@@ -53,7 +54,7 @@ def build_tool_registry() -> Dict[str, Tool]:
         ),
         "get_pokemon_species": Tool(
             name="get_pokemon_species",
-            description="Fetch Pokémon species info (habitat, growth rate, legendary/mythical flags).",
+            description="Fetch  additional data about Pokemon: Pokemon species info (habitat, growth rate, legendary/mythical flags).",
             schema={
                 "type": "object",
                 "properties": {"name": {"type": "string"}},
@@ -141,6 +142,16 @@ def build_tool_registry() -> Dict[str, Tool]:
             },
             # If your loop handles this interactively, the handler won't be used.
             handler=lambda question: {"response": f"Please clarify: {question}"},
+        ),
+        "get_encounter_condition": Tool(
+            name="get_encounter_condition",
+            description="Fetch an encounter condition (e.g., 'time') and list its possible values.",
+            schema={
+                "type": "object",
+                "properties": {"id_or_name": {"type": "string"}},
+                "required": ["id_or_name"],
+            },
+            handler=tool_get_encounter_condition,
         ),
     }
 

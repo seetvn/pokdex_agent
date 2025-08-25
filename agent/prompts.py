@@ -16,7 +16,7 @@ Rules:
 - Avoid overclaiming; if the API cannot verify something, say so briefly.
 - The final output should be as detailed as possible, with specific facts and figures where relevant (e.g., base stats, encounter locations, type matchups, evolution methods).
 
-You can call tools such as get_pokemon, get_pokemon_species, list_pokemon_by_habitat, encounters_for_pokemon, generation, version, get_type, get_move, get_ability.
+You can call tools such as get_pokemon, get_pokemon_species, list_pokemon_by_habitat, encounters_for_pokemon, generation, version, get_type, get_move, get_ability, get_encounter_condition.
 You can also ask clarifying questions to the user if needed via the tool clarify_user.
 
 Clarification policy (via clarify_user):

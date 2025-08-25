@@ -40,6 +40,8 @@ class PokeAPI:
     def get_ability(self, name: str) -> Dict[str, Any]:
         return self.http.get(f"/ability/{name.strip().lower()}")
 
+    def get_encounter_condition(self, id_or_name: str) -> Dict[str, Any]:
+        return self.http.get(f"/encounter-condition/{id_or_name}")
 # Singleton
 poke_api = PokeAPI()
 
@@ -56,8 +58,8 @@ def tool_get_pokemon(name: str) -> Dict[str, Any]:
         "stats": {s["stat"]["name"]: s["base_stat"] for s in data.get("stats", [])},
         "abilities": [a["ability"]["name"] for a in data.get("abilities", [])],
         "moves_count": len(data.get("moves", [])),
-        "moves": [m["move"]["name"] for m in moves[:min(10,len(moves))]],  # first 5 moves
-        "encounters_url": f"{BASE}/pokemon/{data.get('name')}/encounters"
+        "moves": [m["move"]["name"] for m in moves[:min(10,len(moves))]]  # first 5 moves
+        # "encounters_url": f"{BASE}/pokemon/{data.get('name')}/encounters"
     }
     return {"summary": summary}
 
@@ -157,3 +159,24 @@ def tool_get_ability(name: str) -> Dict[str, Any]:
         "short_effect": short_effect,
         "pokemon_with_ability": pokemon,
     }
+
+def tool_get_encounter_condition(id_or_name: str) -> Dict[str, Any]:
+    data = poke_api.get_encounter_condition(id_or_name)
+    en_name = next(
+        (n.get("name") for n in data.get("names", []) if n.get("language", {}).get("name") == "en"),
+        None,
+    )
+    values = []
+    for v in data.get("values", []) or []:
+        v_name = v.get("name")
+        v_url = (v.get("url") or "").rstrip("/")
+        v_id = v_url.split("/")[-1] if v_url else None
+        values.append({"id": v_id, "name": v_name})
+    return {
+        "id": data.get("id"),
+        "name": data.get("name"),
+        "display_name": en_name or data.get("name"),
+        "value_count": len(values),
+        "values": values,  # e.g., [{"id": "1", "name": "morning"}, ...]
+    }
+
