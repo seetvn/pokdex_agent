@@ -15,13 +15,13 @@ class LLM:
 
     def chat(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
         """
-        We do NOT use native tool-calling. The model returns a JSON controller in content.
+        no use native tool-calling. The model returns a JSON controller in content.
         """
         resp = self.client.chat.completions.create(
             model=self.model,
             temperature=self.temperature,
             messages=messages,
-            # We don't provide tools and force JSON output from the model.
+            # Don't provide tools and force JSON output from the model.
             response_format={"type": "json_object"},
         )
 
