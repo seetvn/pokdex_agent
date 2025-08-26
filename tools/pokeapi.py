@@ -182,3 +182,17 @@ def tool_get_encounter_condition(id_or_name: str) -> Dict[str, Any]:
         "values": values,  # e.g., [{"id": "1", "name": "morning"}, ...]
     }
 
+def tool_get_evolution_chain(id: str) -> Dict[str, Any]:
+    data = poke_api.http.get(f"/evolution-chain/{id}")
+    # Simplify the evolution chain structure
+    def parse_chain(chain):
+        evo = {
+            "species": chain.get("species", {}).get("name"),
+            "evolves_to": [parse_chain(e) for e in chain.get("evolves_to", [])]
+        }
+        return evo
+    return {
+        "id": data.get("id"),
+        "chain": parse_chain(data.get("chain", {}))
+    }
+

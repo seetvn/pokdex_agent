@@ -12,7 +12,8 @@ from tools.pokeapi import (
     tool_generation,
     tool_version,
     tool_get_ability,
-    tool_get_encounter_condition    
+    tool_get_encounter_condition,
+    tool_get_evolution_chain   
 )
 
 ToolHandler = Callable[..., Dict[str, Any]]
@@ -152,6 +153,16 @@ def build_tool_registry() -> Dict[str, Tool]:
                 "required": ["id_or_name"],
             },
             handler=tool_get_encounter_condition,
+        ),
+        "get_evolution_chain": Tool(
+            name="get_evolution_chain",
+            description="Fetch the evolution chain for a Pokémon by ID.",
+            schema={
+                "type": "object",
+                "properties": {"id": {"type": "integer"}},
+                "required": ["id"],
+            },
+            handler=tool_get_evolution_chain
         ),
     }
 
