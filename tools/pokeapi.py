@@ -64,6 +64,7 @@ def tool_get_pokemon(name_or_id: str) -> Dict[str, Any]:
     return {"summary": summary}
 
 def tool_get_pokemon_species(name_or_id: str) -> Dict[str, Any]:
+    """ More details about a Pokémon species """
     data = poke_api.get_pokemon_species(name_or_id)
     flavor = next((e["flavor_text"] for e in data.get("flavor_text_entries", []) if e["language"]["name"] == "en"), None)
     habitat = data.get("habitat", {}).get("name")
@@ -82,6 +83,7 @@ def tool_get_pokemon_species(name_or_id: str) -> Dict[str, Any]:
     }
 
 def tool_get_type(name: str) -> Dict[str, Any]:
+    """ Type relations and some Pokémon of this type """
     data = poke_api.get_type(name)
     pokemon = [p["pokemon"]["name"] for p in data.get("pokemon", [])[:min(20,len(data.get("pokemon", [])))] ]  # first 20 Pokémon of this type
     damage_rel = data.get("damage_relations", {})
@@ -103,6 +105,7 @@ def tool_get_type(name: str) -> Dict[str, Any]:
     }
 
 def tool_get_move(name: str) -> Dict[str, Any]:
+    """ Move details """
     data = poke_api.get_move(name)
     return {
         "name": data.get("name"),
@@ -119,6 +122,7 @@ def tool_list_pokemon_by_habitat(habitat: str) -> Dict[str, Any]:
     species = [s["name"] for s in data.get("pokemon_species", [])]
     return {"habitat": data.get("name"), "species": species}
 
+# NOT WORKING AS INTENDED
 def tool_encounters_for_pokemon(name: str) -> Dict[str, Any]:
     data = poke_api.encounters_for_pokemon(name)
     # Simplify
@@ -148,6 +152,7 @@ def tool_version(name: str) -> Dict[str, Any]:
     }
 
 def tool_get_ability(name: str) -> Dict[str, Any]:
+    """ Ability details and some Pokémon that have it """
     data = poke_api.get_ability(name)
     pokemon_list = data.get("pokemon", [])
     pokemon = [p["pokemon"]["name"] for p in pokemon_list[:min(20,len(pokemon_list))]]  # first 20 Pokémon with this ability
@@ -161,7 +166,7 @@ def tool_get_ability(name: str) -> Dict[str, Any]:
         "short_effect": short_effect,
         "pokemon_with_ability": pokemon,
     }
-
+# ALMOST NEVER CALLED
 def tool_get_encounter_condition(id_or_name: str) -> Dict[str, Any]:
     data = poke_api.get_encounter_condition(id_or_name)
     en_name = next(
@@ -183,6 +188,7 @@ def tool_get_encounter_condition(id_or_name: str) -> Dict[str, Any]:
     }
 
 def tool_get_evolution_chain(id: str) -> Dict[str, Any]:
+    """ Evolution chain details by ID """
     data = poke_api.http.get(f"/evolution-chain/{id}")
     # Simplify the evolution chain structure
     def parse_chain(chain):
