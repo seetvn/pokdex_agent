@@ -134,7 +134,7 @@ def build_tool_registry() -> Dict[str, Tool]:
         ),
         "clarify_user": Tool(
             name="clarify_user",
-            description="Ask the user for clarification on their request.",
+            description="Ask the user for clarification on their request. Use it to correct misunderstandings or fill in missing context.",
             schema={
                 "type": "object",
                 "properties": {"question": {"type": "string"}},
@@ -155,7 +155,8 @@ def build_tool_registry() -> Dict[str, Tool]:
         ),
     }
 
+# unused for now, but could be useful if switching to native tool-calling
 def openai_tools_spec(tool_registry: Dict[str, Tool]) -> List[Dict[str, Any]]:
     return [t.to_openai_spec() for t in tool_registry.values()]
 
-#TODO: add more tools for moves, abilities, etc.
+#TODO: add more tools for evolution, items 

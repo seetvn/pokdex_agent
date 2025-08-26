@@ -3,10 +3,11 @@ import json
 from typing import Dict, List
 from rich.console import Console
 from rich.markdown import Markdown
-from tools.random_utls import print_observation
+from tools.random_utls import print_observation 
 
-from .prompts import SYSTEM, PLANNER_INSTRUCTION
-from .tools import build_tool_registry, openai_tools_spec
+from .prompts import SYSTEM, PLANNER_INSTRUCTION, CONTROLLER_INSTRUCTION
+from .tools import build_tool_registry
+from .observations import Observation
 from clients.llm import LLM
 
 console = Console()
@@ -16,7 +17,6 @@ class Agent:
         self.llm = LLM(model=model, temperature=temperature)
         self.max_steps = max_steps
         self.registry = build_tool_registry()
-        self.tools_spec = openai_tools_spec(self.registry)
         self.verbose = verbose
 
     def run(self, user_query: str) -> str:
@@ -24,102 +24,87 @@ class Agent:
             {"role": "user", "content": user_query},
             {"role": "user", "content": PLANNER_INSTRUCTION},
             {"role": "system", "content": SYSTEM},
+            {"role": "system", "content": CONTROLLER_INSTRUCTION},
         ]
-        thoughts: List[str] = []   # collect plan texts across steps
 
         for step in range(1, self.max_steps + 1):
             console.print(f"[bold cyan]Step {step} • Calling LLM[/bold cyan]")
-            resp = self.llm.chat(messages, tools=self.tools_spec)
-            tool_calls = resp.get("tool_calls", [])
-            content = resp.get("content")
-            if tool_calls:
-                # Append the assistant message that contained the tool_calls (required by API)
-                messages.append({
-                    "role": "assistant",
-                    "content": content or None,
-                    "tool_calls": [tc for tc in tool_calls],
-                })
+            resp = self.llm.chat(messages)
+            action_type = (resp.get("type") or "").lower().strip()
+            tool_calls = resp.get("tool_calls", []) or []
+            content = resp.get("content") or ""
 
-                # Show and store the returned content (if any) for this step
-                if content and content.strip():
-                    thought = content.strip()
-                    if not thoughts:
-                        console.print(Markdown(f"** Breakdown:**\n\n{thought}"))
-                    else:
-                        console.print(Markdown(f"**Step {step} gained info:**\n\n{thought}"))
-                    thoughts.append(thought)
+            if content:
+                console.print(Markdown(f"**Controller (step {step}):**\n\n{content}"))
 
-                # Process each tool call in order
-                for tc in tool_calls:
-                    fn = tc["function"]["name"]
-                    args_json = tc["function"]["arguments"]
+            raw_controller = resp.get("raw_controller")
+            if raw_controller:
+                messages.append({"role": "assistant", "content": json.dumps(raw_controller, ensure_ascii=False)})
+
+            # ---- ACTION: CALL TOOLS ----
+            if action_type == "call" and tool_calls:
+                observations: List[Observation] = []
+                for i, tc in enumerate(tool_calls, start=1):
+                    fn = tc.get("tool")
+                    args = tc.get("args") or {}
+                    args_json = json.dumps(args, ensure_ascii=False)
                     console.print(f"[bold yellow]Tool call →[/bold yellow] {fn}({args_json})")
 
-                    # Interactive clarification with the user
-                    if fn == "clarify_user":
-                        try:
-                            question = (json.loads(args_json or "{}").get("question") or "").strip()
-                        except Exception:
-                            question = ""
-                        if not question:
-                            question = "Could you clarify your request?"
+                    obs = Observation(tool=fn, args=args, step=step)
 
+                    # Special interactive path for clarify_user
+                    if fn == "clarify_user":
+                        question = (args.get("question") or "").strip() or "Could you clarify your request?"
                         console.print(Markdown(f"**Agent needs clarification:** {question}"))
                         try:
                             user_answer = input("[you] ").strip()
                         except EOFError:
                             user_answer = ""
+                        obs.finish(result={"user_answer": user_answer})
+                        observations.append(obs)
 
-                        # Return the user's answer as the tool observation
-                        observation = json.dumps({"user_answer": user_answer}, ensure_ascii=False)
-                        messages.append({
-                            "role": "tool",
-                            "tool_call_id": tc["id"],
-                            "name": fn,
-                            "content": observation,
-                        })
-                        # Also echo as a real user message
-                        messages.append({
-                            "role": "user",
-                            "content": user_answer or "(no answer provided)"
-                        })
+                        # Log if verbose
+                        obs.log(console, verbose=self.verbose, pretty_printer=print_observation)
+
+                        # Give the raw human reply as a separate user msg
+                        messages.append({"role": "user", "content": user_answer or "(no answer provided)"})
                         continue
 
-                    # Normal tool handling
+                    # Normal tools
                     tool = self.registry.get(fn)
                     if not tool:
-                        observation = json.dumps({"error": f"Unknown tool {fn}"})
+                        obs.finish(error=f"Unknown tool {fn}")
                     else:
                         try:
-                            observation = tool.call(args_json)
+                            result_str = tool.call(args_json)
+                            obs.finish(result=json.loads(result_str))
                         except Exception as e:
                             console.print(f"[bold red]Error during tool call →[/bold red] {fn}({args_json})")
-                            observation = json.dumps({"error": str(e)})
+                            obs.finish(error=str(e))
 
-                    if self.verbose:
-                        print_observation(json.loads(observation))
+                    # Log if verbose
+                    obs.log(console, verbose=self.verbose, pretty_printer=print_observation)
 
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tc["id"],
-                        "name": fn,
-                        "content": observation,
-                    })
+                    observations.append(obs)
 
-                # Continue the loop after tools so the model can read observations
+                # Feed all observations back as a single USER message
+                obs_msg = {"observations": [o.to_message_payload() for o in observations]}
+                messages.append({
+                    "role": "user",
+                    "content": json.dumps(obs_msg, ensure_ascii=False)
+                })
                 continue
 
-            # No tool call; either final answer (or need more guidance)
-            if content and content.strip():
-                console.print(Markdown("**No tool calls left, producing the output.**"))
-                console.print(Markdown(f"**LLM response (step {step}):**\n\n{content.strip()}"))
-                save_yes_no = input("Do you want to save the output? (y/n): ").strip().lower()
+            # ---- ACTION: WRITE (FINAL ANSWER) ----
+            if action_type == "write":
+                final_answer = content.strip() or "(no report returned)"
+                console.print(Markdown("**No tool calls left.**"))
+                save_yes_no = input("Do you want to save the final output? (y/n): ").strip().lower()
                 if save_yes_no == 'y':
                     console.print(" content will be saved.")
-                return 
+                return final_answer
 
-            # If we reach here, ask the model to continue planning
-            messages.append({"role": "user", "content": "Continue your plan and call the next tool."})
+            # ---- UNKNOWN / EMPTY → ask it to continue ----
+            messages.append({"role": "user", "content": "Continue your plan and call the next tool or finish with a report."})
 
-        # Fallback if loop ends without final answer
         return "I wasn't able to complete the research within the allotted steps. Consider increasing --max-steps."

@@ -47,8 +47,8 @@ poke_api = PokeAPI()
 
 # --- Tool handler functions (pure) ---
 
-def tool_get_pokemon(name: str) -> Dict[str, Any]:
-    data = poke_api.get_pokemon(name)
+def tool_get_pokemon(name_or_id: str) -> Dict[str, Any]:
+    data = poke_api.get_pokemon(name_or_id)
     # Summarise essential bits to keep tokens small
     moves = data.get("moves", [])
     summary = {
@@ -58,13 +58,13 @@ def tool_get_pokemon(name: str) -> Dict[str, Any]:
         "stats": {s["stat"]["name"]: s["base_stat"] for s in data.get("stats", [])},
         "abilities": [a["ability"]["name"] for a in data.get("abilities", [])],
         "moves_count": len(data.get("moves", [])),
-        "moves": [m["move"]["name"] for m in moves[:min(10,len(moves))]]  # first 5 moves
+        "moves": [m["move"]["name"] for m in moves[:min(20,len(moves))]]  # first 20 moves
         # "encounters_url": f"{BASE}/pokemon/{data.get('name')}/encounters"
     }
     return {"summary": summary}
 
-def tool_get_pokemon_species(name: str) -> Dict[str, Any]:
-    data = poke_api.get_pokemon_species(name)
+def tool_get_pokemon_species(name_or_id: str) -> Dict[str, Any]:
+    data = poke_api.get_pokemon_species(name_or_id)
     flavor = next((e["flavor_text"] for e in data.get("flavor_text_entries", []) if e["language"]["name"] == "en"), None)
     habitat = data.get("habitat", {}).get("name")
     growth_rate = data.get("growth_rate", {}).get("name")
@@ -83,6 +83,7 @@ def tool_get_pokemon_species(name: str) -> Dict[str, Any]:
 
 def tool_get_type(name: str) -> Dict[str, Any]:
     data = poke_api.get_type(name)
+    pokemon = [p["pokemon"]["name"] for p in data.get("pokemon", [])[:min(20,len(data.get("pokemon", [])))] ]  # first 20 Pokémon of this type
     damage_rel = data.get("damage_relations", {})
     double_to = [t["name"] for t in damage_rel.get("double_damage_to", [])]
     double_from = [t["name"] for t in damage_rel.get("double_damage_from", [])]
@@ -98,6 +99,7 @@ def tool_get_type(name: str) -> Dict[str, Any]:
         "half_damage_from": half_from,
         "no_damage_to": no_to,
         "no_damage_from": no_from,
+        "pokemon_of_type": pokemon,
     }
 
 def tool_get_move(name: str) -> Dict[str, Any]:
@@ -148,7 +150,7 @@ def tool_version(name: str) -> Dict[str, Any]:
 def tool_get_ability(name: str) -> Dict[str, Any]:
     data = poke_api.get_ability(name)
     pokemon_list = data.get("pokemon", [])
-    pokemon = [p["pokemon"]["name"] for p in pokemon_list[:min(10,len(pokemon_list))]]  # first 10 Pokémon with this ability
+    pokemon = [p["pokemon"]["name"] for p in pokemon_list[:min(20,len(pokemon_list))]]  # first 20 Pokémon with this ability
     effect = next((e["effect"] for e in data.get("effect_entries", []) if e["language"]["name"] == "en"), None)
     short_effect = next((e["short_effect"] for e in data.get("effect_entries", []) if e["language"]["name"] == "en"), None)
     return {
