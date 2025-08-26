@@ -9,6 +9,7 @@ from .prompts import SYSTEM, PLANNER_INSTRUCTION, CONTROLLER_INSTRUCTION
 from .tools import build_tool_registry
 from .observations import Observation
 from clients.llm import LLM
+import os
 
 console = Console()
 
@@ -18,6 +19,7 @@ class Agent:
         self.max_steps = max_steps
         self.registry = build_tool_registry()
         self.verbose = verbose
+        self.current_query = None
 
     def _handle_call_action(
         self,
@@ -83,7 +85,7 @@ class Agent:
             "content": json.dumps(obs_msg, ensure_ascii=False)
         })
 
-    def _handle_write_action(self,content: str) -> str:
+    def _handle_write_action(self, content: str) -> str:
         """
         Finalize and return the controller's report.
         """
@@ -93,6 +95,13 @@ class Agent:
         save_yes_no = input("Do you want to save the final output? (y/n): ").strip().lower()
         if save_yes_no == 'y':
             console.print(" content will be saved.")
+            from datetime import datetime
+            t = datetime.now().strftime("%Y%m%d_%H%M%S")
+            os.makedirs("generated_reports", exist_ok=True)
+            label = "_".join(self.current_query.lower().split())
+            file_name = f"generated_reports/{label}_{t}.md"
+            with open(file_name, "w", encoding="utf-8") as f:
+                f.write(final_answer)
         return final_answer
 
     # ---------------------------
@@ -100,6 +109,7 @@ class Agent:
     # ---------------------------
 
     def run(self, user_query: str) -> str:
+        self.current_query = user_query
         messages: List[Dict[str, str]] = [
             {"role": "user", "content": user_query},
             {"role": "user", "content": PLANNER_INSTRUCTION},
@@ -115,6 +125,7 @@ class Agent:
             tool_calls = resp["tool_calls"]
             content = resp["content"]
 
+            # If the model decided to finish i.e. no more tool calls
             if action_type == "write":
                 return self._handle_write_action(content=content)
 
