@@ -30,9 +30,9 @@ class Agent:
         for step in range(1, self.max_steps + 1):
             console.print(f"[bold cyan]Step {step} • Calling LLM[/bold cyan]")
             resp = self.llm.chat(messages)
-            action_type = (resp.get("type") or "").lower().strip()
-            tool_calls = resp.get("tool_calls", []) or []
-            content = resp.get("content") or ""
+            action_type = resp["type"].lower().strip()
+            tool_calls = resp["tool_calls"]
+            content = resp["content"]
 
             if content:
                 console.print(Markdown(f"**Controller (step {step}):**\n\n{content}"))
@@ -45,8 +45,8 @@ class Agent:
             if action_type == "call" and tool_calls:
                 observations: List[Observation] = []
                 for i, tc in enumerate(tool_calls, start=1):
-                    fn = tc.get("tool")
-                    args = tc.get("args") or {}
+                    fn = tc["tool"]
+                    args = tc.get("args",{})
                     args_json = json.dumps(args, ensure_ascii=False)
                     console.print(f"[bold yellow]Tool call →[/bold yellow] {fn}({args_json})")
 
