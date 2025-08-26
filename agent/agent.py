@@ -31,7 +31,7 @@ class Agent:
         observations message back to `messages` for the next step.
         """
         observations: List[Observation] = []
-
+        
         for i, tc in enumerate(tool_calls, start=1):
             fn = tc.get("tool")
             args = tc.get("args", {}) or {}
@@ -89,6 +89,7 @@ class Agent:
         """
         final_answer = (content or "").strip() or "(no report returned)"
         console.print(Markdown("**No tool calls left.**"))
+        console.print(Markdown(f"**Final Report:**\n\n{final_answer}"))
         save_yes_no = input("Do you want to save the final output? (y/n): ").strip().lower()
         if save_yes_no == 'y':
             console.print(" content will be saved.")
@@ -114,6 +115,9 @@ class Agent:
             tool_calls = resp["tool_calls"]
             content = resp["content"]
 
+            if action_type == "write":
+                return self._handle_write_action(content=content)
+
             # Log controller reasoning/notes (optional)
             if content:
                 console.print(Markdown(f"**Controller (step {step}):**\n\n{content}"))
@@ -129,8 +133,6 @@ class Agent:
                 # Loop so the model can read observations and decide next step
                 continue
 
-            if action_type == "write":
-                return self._handle_write_action(content=content)
 
             # Unknown/empty -> nudge to continue
             messages.append({"role": "user", "content": "Continue your plan and call the next tool or finish with a report."})

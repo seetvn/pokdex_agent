@@ -54,7 +54,7 @@ def tool_get_pokemon(name_or_id: str) -> Dict[str, Any]:
     summary = {
         "name": data.get("name"),
         "types": [t["type"]["name"] for t in data.get("types", [])],
-        "base_experience": data.get("base_experience"),
+        "base_experience_gained": data.get("base_experience"),
         "stats": {s["stat"]["name"]: s["base_stat"] for s in data.get("stats", [])},
         "abilities": [a["ability"]["name"] for a in data.get("abilities", [])],
         "moves_count": len(data.get("moves", [])),
