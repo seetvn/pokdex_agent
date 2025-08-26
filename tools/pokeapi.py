@@ -26,7 +26,8 @@ class PokeAPI:
 
     def list_pokemon_by_habitat(self, habitat: str) -> Dict[str, Any]:
         return self.http.get(f"/pokemon-habitat/{habitat.strip().lower()}")
-
+    
+    # NOT WORKING: returns empty list
     def encounters_for_pokemon(self, name: str) -> List[Dict[str, Any]]:
         name = name.strip().lower()
         return self.http.get(f"/pokemon/{name}/encounters")

@@ -16,7 +16,7 @@ def main():
     agent = Agent(model=args.model, max_steps=args.max_steps, temperature=args.temperature,verbose=args.verbose)
     while True:
         question = input("\nWhat would you like to know? (or 'exit' to quit): \n").strip()
-        if question .lower() in ("exit", "quit"):
+        if question.lower() in ("exit", "quit"):
             print("Goodbye!")
             break
         agent.run(question)
