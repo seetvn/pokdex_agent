@@ -15,9 +15,8 @@ The agent doesn’t plan everything at once. Instead, it:
 
 ## Example of Available Functions
 
-- `get_pokemon_data(name)` → calls `/pokemon/{name}` for stats, types, moves, encounters.
-- `get_game_generation_info(name)` → calls `/generation/{name}` to see what species and version groups belong to a generation.
-- `get_pokedex(name)` → calls `/pokedex/{name}` for the list of Pokémon in that dex.
+- `tool_get_pokemon(name)` → calls `/pokemon/{name}` for stats, types, moves, encounters.
+- `tool_get_move(name)` for details about a move: type, power etc..
 
 Each function wraps a PokéAPI endpoint. The agent doesn’t hit everything at once — it chooses based on what’s needed.
 
@@ -67,8 +66,12 @@ It builds answers step by step, rather than pulling everything blindly.
 This makes it efficient, transparent, and easy to grow.
 """
 ## How to run
-Use the command ```python run_agent.py  --max-steps 30 ``` to run the agent, after setting the ```AI_API_KEY``` with .env
+First set the ```AI_API_KEY``` and the ```MODEL``` as needed within ```.env```, a template file is provided.
+Use the command ```python run_agent.py  --max-steps 30 ``` to run the agent.
 
 You can add the ```verbose``` flag to see the observations afer each step.
 
 You can also change the model via ```model``` flag.
+
+## Next steps
+A bottleneck that was observed was during API calls at each call step: I believe this could be made faster by making the API calls asynchronous rather than having them be sequential.
