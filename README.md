@@ -58,13 +58,6 @@ No more tool calls needed. The agent assembles the report:
 Pikachu is a versatile Electric-type with good speed and accessible moves. Its capture rate and growth rate make it beginner-friendly and effective in playthroughs.
 
 ---
-
-## Summary
-
-The agent is a **decision + action loop** over a set of PokéAPI functions.  
-It builds answers step by step, rather than pulling everything blindly.  
-This makes it efficient, transparent, and easy to grow.
-"""
 ## How to run
 First set the ```AI_API_KEY``` and the ```MODEL``` as needed within ```.env```, a template file is provided.
 Use the command ```python run_agent.py  --max-steps 30 ``` to run the agent.
