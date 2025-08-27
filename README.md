@@ -66,5 +66,9 @@ You can add the ```verbose``` flag to see the observations afer each step.
 
 You can also change the model via ```model``` flag.
 
+## Overview of the development process
+**First iteration** : Initially, I used function calling by passing the tools directly into the LLM via the ```tools``` param but I could not get it to output its reasoning for making those tool calls where each response would either only have some output content and none of the tool calls or vice versa.
+**Second iteration** : I decided to no longer use tool calls but to have the output content be in a json format listing all the tool calls it will make and the reasoning for doing so. The approach worked well and the model would try different tools it had access to if it the curent tool call it made did not work as intended or at all (API error).
+
 ## Next steps
 A bottleneck that was observed was during API calls at each call step: I believe this could be made faster by making the API calls asynchronous rather than having them be sequential.
